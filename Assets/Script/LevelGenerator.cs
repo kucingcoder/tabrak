@@ -13,6 +13,7 @@ public class LevelGenerator : MonoBehaviour
 
 
     private List<GameObject> activeRoads = new List<GameObject>();
+    private int roadsSpawned = 0; // Untuk menghitung jalan yang sudah di-spawn
     private float roadLength = 16f; // SESUAIKAN dengan panjang prefab jalanmu
     private float spawnZ = 0f;
 
@@ -27,8 +28,13 @@ public class LevelGenerator : MonoBehaviour
 
     void Update()
     {
-        // Jika player sudah melewati batas, spawn jalan baru dan hapus yang lama
-        if (playerTransform.position.z - roadLength > spawnZ - (initialRoads * roadLength))
+        // Pengaman jika player atau jalan belum siap
+        if (playerTransform == null || activeRoads.Count < 2) return;
+
+        // Cek posisi mobil relatif terhadap jalan KEDUA di antrean.
+        // Kita gunakan 'activeRoads[1]' (jalan kedua), bukan perhitungan matematis.
+        // Kita gunakan '<' karena arah maju kita adalah ke sumbu X negatif.
+        if (playerTransform.position.x < activeRoads[1].transform.position.x)
         {
             SpawnRoad();
             DeleteOldestRoad();
@@ -40,7 +46,15 @@ public class LevelGenerator : MonoBehaviour
         GameObject road = Instantiate(roadPrefab, new Vector3(-spawnZ, 0f, 0), Quaternion.Euler(-90, 0, 0));
         activeRoads.Add(road);
         spawnZ += roadLength;
-        SpawnObjects(road.transform);
+
+        // Tambah penghitung setiap kali jalan dibuat
+        roadsSpawned++;
+
+        // HANYA panggil SpawnObjects jika sudah lebih dari 2 jalan yang dibuat
+        if (roadsSpawned > 2)
+        {
+            SpawnObjects(road.transform);
+        }
     }
 
     private void DeleteOldestRoad()
